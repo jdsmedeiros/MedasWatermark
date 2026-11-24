@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f1115" />
+  <title>Studio Post — Filtro & Marca d'Água</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Studio Post" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --surface: #171a21;
+      --surface-2: #1f242e;
+      --border: #2b313f;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #ff5722;
+      --accent-2: #ff9800;
+      --accent-grad: linear-gradient(135deg, #ff5722, #ff9800);
+      --success: #10b981;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 5px;
+    }
+
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand p {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .logo-status {
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .logo-status:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .logo-status.ok {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 820px) {
+      .workspace {
+        grid-template-columns: 1.35fr 0.9fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Área de upload / preview */
+    .dropzone {
+      position: relative;
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      background: #12151b;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(255, 87, 34, 0.06);
+    }
+
+    .dropzone.has-image {
+      border-style: solid;
+      padding: 10px;
+      cursor: default;
+      min-height: 260px;
+    }
+
+    .dropzone-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .upload-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 87, 34, 0.12);
+      color: var(--accent-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropzone-placeholder h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .dropzone-placeholder span {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .preview-wrap {
+      display: none;
+      width: 100%;
+      position: relative;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dropzone.has-image .dropzone-placeholder {
+      display: none;
+    }
+
+    .dropzone.has-image .preview-wrap {
+      display: flex;
+    }
+
+    #previewCanvas {
+      max-width: 100%;
+      max-height: 65vh;
+      width: auto;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge.applied {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Botões */
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s, opacity 0.2s, background 0.2s;
+      width: 100%;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-grad);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(255, 87, 34, 0.28);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #06281e;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      width: auto;
+    }
+
+    .action-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .download-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .download-row.two-cols {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Controles */
+    .section-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .preset-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .preset-btn small {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .preset-btn.active {
+      border-color: var(--accent);
+      background: rgba(255, 87, 34, 0.12);
+    }
+
+    details {
+      background: #12151b;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    summary {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .controls-body {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .control-header strong {
+      color: var(--text);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .toggle-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f2937;
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon" id="brandIconBox">
+          <img id="headerLogoPreview" alt="Logo" style="display:none;" />
+          <span id="headerLogoFallback">🔥</span>
+        </div>
+        <div>
+          <h1>Studio Post</h1>
+          <p>Filtro natural + Marca d'água automática</p>
+        </div>
+      </div>
+
+      <button type="button" class="logo-status" id="logoStatusBtn" title="Clique para carregar outra logo manualmente">
+        Carregando logo...
+      </button>
+      <input type="file" id="logoInput" accept="image/*" />
+    </header>
+
+    <main class="workspace">
+      <!-- Área da Imagem -->
+      <section class="card">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="photoInput" accept="image/*" />
+
+          <div class="dropzone-placeholder">
+            <div class="upload-circle">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <h2>Toque para escolher ou arraste a foto</h2>
+            <span>Funciona com fotos da galeria, câmera ou PC</span>
+          </div>
+
+          <div class="preview-wrap">
+            <div class="preview-toolbar">
+              <span class="badge" id="statusBadge">Original</span>
+              <div class="mini-actions">
+                <button type="button" class="btn btn-secondary btn-sm" id="compareBtn" style="display:none;">
+                  Ver Original
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="changePhotoBtn">
+                  Trocar Foto
+                </button>
+              </div>
+            </div>
+            <canvas id="previewCanvas"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Painel de Ações -->
+      <section class="card">
+        <div class="section-title">Ação Rápida</div>
+
+        <div class="action-stack">
+          <button type="button" class="btn btn-primary" id="applyBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+            </svg>
+            Aplicar Filtro + Marca d'Água
+          </button>
+
+          <div class="download-row" id="downloadRow">
+            <button type="button" class="btn btn-success" id="downloadBtn" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Salvar Imagem
+            </button>
+
+            <button type="button" class="btn btn-secondary" id="shareBtn" style="display:none;" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Compartilhar
+            </button>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:4px;">Estilo do Filtro</div>
+        <div class="presets" id="presetGroup">
+          <button type="button" class="preset-btn active" data-preset="natural">
+            Natural Pro
+            <small>Equilibrado e real</small>
+          </button>
+          <button type="button" class="preset-btn" data-preset="clean">
+            Tech Clean
+            <small>Mais luz e clareza</small>
+          </button>
+          <button type="button" class="preset-btn" data-preset="vivid">
+            Destaque
+            <small>Cores mais vivas</small>
+          </button>
+          <button type="button" class="preset-btn" data-preset="none">
+            Sem Filtro
+            <small>Só a marca d'água</small>
+          </button>
+        </div>
+
+        <details>
+          <summary>
+            Ajustes da Marca d'Água
+            <span style="color:var(--muted); font-size:0.78rem;">Opcional ▾</span>
+          </summary>
+          <div class="controls-body">
+            <div class="control-group">
+              <div class="control-header">
+                <span>Transparência (Opacidade)</span>
+                <strong id="opacityVal">35%</strong>
+              </div>
+              <input type="range" id="opacityRange" min="10" max="90" value="35" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Tamanho da Logo</span>
+                <strong id="sizeVal">18%</strong>
+              </div>
+              <input type="range" id="sizeRange" min="8" max="35" value="18" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Margem das Bordas</span>
+                <strong id="marginVal">4%</strong>
+              </div>
+              <input type="range" id="marginRange" min="1" max="12" value="4" />
+            </div>
+
+            <label class="toggle-row">
+              <span>Remover fundo preto da logo</span>
+              <input type="checkbox" id="removeBlackToggle" checked />
+            </label>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const CONFIG = {
+      defaultLogoPath: './logo.png',
+      maxExportSide: 2160 // Alta qualidade para Instagram sem travar Safari iOS
+    };
+
+    const state = {
+      photoImg: null,
+      photoName: 'post-servico',
+      rawLogoImg: null,
+      cleanLogoCanvas: null,
+      preset: 'natural',
+      isProcessed: false,
+      showingOriginal: false,
+      opacity: 35,
+      size: 18,
+      margin: 4,
+      removeBlack: true
+    };
+
+    // Elementos DOM
+    const dropzone = document.getElementById('dropzone');
+    const photoInput = document.getElementById('photoInput');
+    const logoInput = document.getElementById('logoInput');
+    const logoStatusBtn = document.getElementById('logoStatusBtn');
+    const headerLogoPreview = document.getElementById('headerLogoPreview');
+    const headerLogoFallback = document.getElementById('headerLogoFallback');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const ctx = previewCanvas.getContext('2d', { willReadFrequently: true });
+
+    const applyBtn = document.getElementById('applyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const downloadRow = document.getElementById('downloadRow');
+    const compareBtn = document.getElementById('compareBtn');
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    const toastEl = document.getElementById('toast');
+
+    const opacityRange = document.getElementById('opacityRange');
+    const sizeRange = document.getElementById('sizeRange');
+    const marginRange = document.getElementById('marginRange');
+    const removeBlackToggle = document.getElementById('removeBlackToggle');
+
+    // Canvas oculto para exportação em alta resolução
+    const exportCanvas = document.createElement('canvas');
+    const exportCtx = exportCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Habilita botão compartilhar se o celular suportar Web Share API com arquivos
+    if (navigator.share && navigator.canShare) {
+      shareBtn.style.display = 'inline-flex';
+      downloadRow.classList.add('two-cols');
+    }
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+    }
+
+    // Remove fundo preto (se ativado) e recorta margens vazias da logo
+    function prepareLogoCanvas(img, removeBlack) {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || img.width;
+      c.height = img.naturalHeight || img.height;
+      const cCtx = c.getContext('2d', { willReadFrequently: true });
+      cCtx.drawImage(img, 0, 0);
+
+      const imgData = cCtx.getImageData(0, 0, c.width, c.height);
+      const data = imgData.data;
+
+      let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
+
+      for (let y = 0; y < c.height; y++) {
+        for (let x = 0; x < c.width; x++) {
+          const i = (y * c.width + x) * 4;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          let a = data[i + 3];
+
+          if (removeBlack && a > 0) {
+            const maxChan = Math.max(r, g, b);
+            if (maxChan <= 18) {
+              a = 0;
+            } else if (maxChan < 48) {
+              // Transição suave nas bordas (anti-aliasing)
+              a = Math.round(a * ((maxChan - 18) / 30));
+            }
+            data[i + 3] = a;
+          }
+
+          if (a > 12) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      cCtx.putImageData(imgData, 0, 0);
+
+      // Se encontrou conteúdo visível, recorta no tamanho exato da logo
+      if (maxX > minX && maxY > minY) {
+        const cropW = maxX - minX + 1;
+        const cropH = maxY - minY + 1;
+        const trimmed = document.createElement('canvas');
+        trimmed.width = cropW;
+        trimmed.height = cropH;
+        trimmed.getContext('2d').drawImage(c, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+        return trimmed;
+      }
+
+      return c;
+    }
+
+    function setLogoImage(img, labelText) {
+      state.rawLogoImg = img;
+      state.cleanLogoCanvas = prepareLogoCanvas(img, state.removeBlack);
+
+      headerLogoPreview.src = state.cleanLogoCanvas.toDataURL('image/png');
+      headerLogoPreview.style.display = 'block';
+      headerLogoFallback.style.display = 'none';
+
+      logoStatusBtn.textContent = labelText || 'Logo pronta ✓';
+      logoStatusBtn.classList.add('ok');
+
+      if (state.isProcessed) renderProcessed();
+    }
+
+    // Carrega ./logo.png automaticamente ao abrir a página
+    function loadDefaultLogo() {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => setLogoImage(img, 'Logo pronta ✓');
+      img.onerror = () => {
+        logoStatusBtn.textContent = 'Carregar Logo';
+        logoStatusBtn.classList.remove('ok');
+      };
+      img.src = CONFIG.defaultLogoPath + '?v=' + Date.now();
+    }
+
+    // Carregamento manual de logo (opcional)
+    logoStatusBtn.addEventListener('click', () => logoInput.click());
+    logoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        setLogoImage(img, 'Logo personalizada ✓');
+        URL.revokeObjectURL(url);
+        showToast('Logomarca atualizada!');
+      };
+      img.src = url;
+    });
+
+    // Upload da foto do serviço
+    dropzone.addEventListener('click', (e) => {
+      if (!state.photoImg || e.target === dropzone) {
+        photoInput.click();
+      }
+    });
+
+    changePhotoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      photoInput.click();
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        handlePhotoFile(file);
+      }
+    });
+
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handlePhotoFile(file);
+      photoInput.value = '';
+    });
+
+    function handlePhotoFile(file) {
+      state.photoName = file.name.replace(/\.[^/.]+$/, '') || 'post-servico';
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        state.photoImg = img;
+        state.isProcessed = false;
+        state.showingOriginal = false;
+
+        dropzone.classList.add('has-image');
+        applyBtn.disabled = false;
+        downloadBtn.disabled = true;
+        shareBtn.disabled = true;
+        compareBtn.style.display = 'none';
+        statusBadge.textContent = 'Original';
+        statusBadge.classList.remove('applied');
+
+        drawBasePhoto(previewCanvas, ctx, img, 1200);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    function drawBasePhoto(canvas, context, img, maxSide) {
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+
+      if (Math.max(w, h) > maxSide) {
+        const ratio = maxSide / Math.max(w, h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      context.clearRect(0, 0, w, h);
+      context.drawImage(img, 0, 0, w, h);
+    }
+
+    // Filtro natural via manipulação de pixels (100% compatível com iOS e Android)
+    function applyPhotoFilter(context, w, h, preset) {
+      if (preset === 'none') return;
+
+      const presets = {
+        natural: { brightness: 5, contrast: 1.08, saturation: 1.13, warmth: 3, vignette: 0.14 },
+        clean:   { brightness: 10, contrast: 1.06, saturation: 1.08, warmth: -2, vignette: 0.08 },
+        vivid:   { brightness: 4, contrast: 1.13, saturation: 1.24, warmth: 5, vignette: 0.16 }
+      };
+
+      const p = presets[preset] || presets.natural;
+      const imgData = context.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      const contrast = p.contrast;
+      const intercept = 128 * (1 - contrast);
+      const sat = p.saturation;
+      const br = p.brightness;
+      const warm = p.warmth;
+
+      for (let i = 0; i < d.length; i += 4) {
+        let r = d[i];
+        let g = d[i + 1];
+        let b = d[i + 2];
+
+        // Brilho + Contraste
+        r = r * contrast + intercept + br + warm;
+        g = g * contrast + intercept + br;
+        b = b * contrast + intercept + br - warm * 0.6;
+
+        // Saturação suave (luminância perceptual)
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        r = gray + (r - gray) * sat;
+        g = gray + (g - gray) * sat;
+        b = gray + (b - gray) * sat;
+
+        d[i]     = r < 0 ? 0 : r > 255 ? 255 : r;
+        d[i + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+        d[i + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+      }
+
+      context.putImageData(imgData, 0, 0);
+
+      // Vinheta bem sutil para dar acabamento profissional
+      if (p.vignette > 0) {
+        const cx = w / 2;
+        const cy = h / 2;
+        const radius = Math.hypot(cx, cy);
+        const grad = context.createRadialGradient(cx, cy, radius * 0.45, cx, cy, radius);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, `rgba(0,0,0,${p.vignette})`);
+        context.fillStyle = grad;
+        context.fillRect(0, 0, w, h);
+      }
+    }
+
+    // Insere a logomarca no canto inferior direito
+    function drawWatermark(context, w, h) {
+      if (!state.cleanLogoCanvas) return;
+
+      const logo = state.cleanLogoCanvas;
+      const targetW = w * (state.size / 100);
+      const scale = targetW / logo.width;
+      const targetH = logo.height * scale;
+
+      const marginPx = Math.min(w, h) * (state.margin / 100);
+      const x = w - targetW - marginPx;
+      const y = h - targetH - marginPx;
+
+      context.save();
+      context.globalAlpha = state.opacity / 100;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      context.drawImage(logo, x, y, targetW, targetH);
+      context.restore();
+    }
+
+    function renderToCanvas(canvas, context, maxSide) {
+      drawBasePhoto(canvas, context, state.photoImg, maxSide);
+      applyPhotoFilter(context, canvas.width, canvas.height, state.preset);
+      drawWatermark(context, canvas.width, canvas.height);
+    }
+
+    function renderProcessed() {
+      if (!state.photoImg) return;
+
+      renderToCanvas(previewCanvas, ctx, 1400);
+      state.isProcessed = true;
+      state.showingOriginal = false;
+
+      statusBadge.textContent = 'Pronto para postar ✓';
+      statusBadge.classList.add('applied');
+      compareBtn.style.display = 'inline-flex';
+      compareBtn.textContent = 'Ver Original';
+      downloadBtn.disabled = false;
+      shareBtn.disabled = false;
+    }
+
+    // Botão principal
+    applyBtn.addEventListener('click', () => {
+      if (!state.photoImg) return;
+      if (!state.cleanLogoCanvas) {
+        showToast('Atenção: logo.png não encontrada. Carregue a logo no topo.');
+      }
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Processando...';
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          renderProcessed();
+          applyBtn.disabled = false;
+          applyBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+            </svg>
+            Aplicar Filtro + Marca d'Água`;
+          showToast('Filtro e marca d\'água aplicados!');
+        }, 30);
+      });
+    });
+
+    // Alternar Antes / Depois
+    compareBtn.addEventListener('click', () => {
+      if (!state.photoImg || !state.isProcessed) return;
+      state.showingOriginal = !state.showingOriginal;
+      if (state.showingOriginal) {
+        drawBasePhoto(previewCanvas, ctx, state.photoImg, 1400);
+        compareBtn.textContent = 'Ver Editada';
+        statusBadge.textContent = 'Original';
+        statusBadge.classList.remove('applied');
+      } else {
+        renderProcessed();
+      }
+    });
+
+    // Presets de filtro
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.preset = btn.dataset.preset;
+        if (state.isProcessed) renderProcessed();
+      });
+    });
+
+    // Sliders de ajuste fino
+    opacityRange.addEventListener('input', () => {
+      state.opacity = Number(opacityRange.value);
+      document.getElementById('opacityVal').textContent = state.opacity + '%';
+      if (state.isProcessed) renderProcessed();
+    });
+
+    sizeRange.addEventListener('input', () => {
+      state.size = Number(sizeRange.value);
+      document.getElementById('sizeVal').textContent = state.size + '%';
+      if (state.isProcessed) renderProcessed();
+    });
+
+    marginRange.addEventListener('input', () => {
+      state.margin = Number(marginRange.value);
+      document.getElementById('marginVal').textContent = state.margin + '%';
+      if (state.isProcessed) renderProcessed();
+    });
+
+    removeBlackToggle.addEventListener('change', () => {
+      state.removeBlack = removeBlackToggle.checked;
+      if (state.rawLogoImg) {
+        setLogoImage(state.rawLogoImg, logoStatusBtn.textContent);
+      }
+    });
+
+    // Gera Blob em alta resolução para salvar ou compartilhar
+    function generateHighResBlob(callback) {
+      renderToCanvas(exportCanvas, exportCtx, CONFIG.maxExportSide);
+      exportCanvas.toBlob((blob) => callback(blob), 'image/jpeg', 0.92);
+    }
+
+    // Salvar no dispositivo
+    downloadBtn.addEventListener('click', () => {
+      if (!state.isProcessed) return;
+      downloadBtn.disabled = true;
+      generateHighResBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.photoName}-post.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        downloadBtn.disabled = false;
+        showToast('Imagem salva em alta qualidade!');
+      });
+    });
+
+    // Compartilhar nativamente no Android / iOS
+    shareBtn.addEventListener('click', () => {
+      if (!state.isProcessed) return;
+      shareBtn.disabled = true;
+      generateHighResBlob(async (blob) => {
+        try {
+          const file = new File([blob], `${state.photoName}-post.jpg`, { type: 'image/jpeg' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'Post pronto' });
+          } else {
+            showToast('Use o botão Salvar Imagem neste navegador.');
+          }
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            showToast('Não foi possível compartilhar.');
+          }
+        } finally {
+          shareBtn.disabled = false;
+        }
+      });
+    });
+
+    // Inicializa carregando a logo da VPS
+    loadDefaultLogo();
+    
+    // Registra o Service Worker para ativar o PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
